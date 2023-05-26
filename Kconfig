@@ -1,0 +1,581 @@
+################################################################################
+# Zephyr OS
+
+source "Kconfig.zephyr"
+
+################################################################################
+# Main module
+
+menu "Main module"
+
+########################################
+# Application type
+
+choice MAIN_DATA_TYPE_CHOICE
+    prompt "Upload data type"
+    default MAIN_DATA_TYPE_DUMMY
+    help
+        Data type to upload. This option specifies the type of data frames to
+        upload. The data frames may be one of three types - dummy, LTE, or GNSS.
+        The dummy logging application regularly uploads dummy data to the
+        database server. The LTE logging application uploads LTE network-related
+        data such as cell information, power saving parameters, etc. The GNSS
+        logging application uploads GNSS fixes.
+
+config MAIN_DATA_TYPE_DUMMY
+    bool "Dummy"
+    help
+        Upload dummy data frames.
+
+config MAIN_DATA_TYPE_LTE
+    bool "LTE"
+    help
+        Upload LTE data frames.
+
+config MAIN_DATA_TYPE_GNSS
+    bool "GNSS"
+    help
+        Upload GNSS data frames.
+
+endchoice
+
+########################################
+# Sleep timers
+
+config MAIN_SLEEP_TIME
+    int "Sleep time"
+    default 300
+    help
+        Sleep time in seconds. This option specifies the time spent by the
+        system in sleep mode in a single cycle.
+
+########################################
+# Memory allocation
+
+config MAIN_DUMMY_BUF_SIZE
+    int "Dummy data buffer size"
+    default 512
+    help
+        Buffer size for dummy data frames. This option specifies the allocated
+        buffer size to store a single dummy data point as a JSON string.
+
+config MAIN_LTE_BUF_SIZE
+    int "LTE data buffer size"
+    default 512
+    help
+        Buffer size for LTE data frames. This option specifies the allocated
+        buffer size to store a single LTE data point as a JSON string.
+
+config MAIN_GNSS_BUF_SIZE
+    int "GNSS data buffer size"
+    default 512
+    help
+        Buffer size for GNSS data frames. This option specifies the allocated
+        buffer size to store a single GNSS data point as a JSON string.
+
+########################################
+# Data upload
+
+config MAIN_DUMMY_UPLOAD_URL
+    string "Dummy data upload URL"
+    default ""
+    help
+        URL for dummy data upload. This option specifies the URL on the database
+        server, to which dummy data points are to be uploaded. The URL must not
+        contain the server host name, only the resource identifier.
+
+config MAIN_LTE_UPLOAD_URL
+    string "LTE data upload URL"
+    default ""
+    help
+        URL for LTE data upload. This option specifies the URL on the database
+        server, to which LTE data points are to be uploaded. The URL must not
+        contain the server host name, only the resource identifier.
+
+config MAIN_GNSS_UPLOAD_URL
+    string "GNSS data upload URL"
+    default ""
+    help
+        URL for GNSS data upload. This option specifies the URL on the database
+        server, to which GNSS data points are to be uploaded. The URL must not
+        contain the server host name, only the resource identifier.
+
+########################################
+# Logging
+
+choice MAIN_LOG_LEVEL_CHOICE
+    prompt "Log level"
+    depends on LOG
+    default MAIN_LOG_LEVEL_INF
+    help
+        Message severity threshold for logging. This option controls which
+        severities of messages are displayed and which ones are suppressed.
+        Messages can have 4 severity levels - debug, info, warning, and error -
+        in that order of increasing severity. Messages below the configured
+        severity threshold are suppressed.
+
+config MAIN_LOG_LEVEL_OFF
+    bool "Off"
+    help
+        Do not log messages. No messages are displayed. Messages of all severity
+        levels are suppressed.
+
+config MAIN_LOG_LEVEL_ERR
+    bool "Error"
+    help
+        Log up to error messages. Error messages are displayed. Warning, info,
+        and debug messages are suppressed.
+
+config MAIN_LOG_LEVEL_WRN
+    bool "Warning"
+    help
+        Log up to warning messages. Error and warning messages are displayed.
+        Info and debug messages are suppressed.
+
+config MAIN_LOG_LEVEL_INF
+    bool "Info"
+    help
+        Log up to info messages. Error, warning, and info messages are
+        displayed. Debug messages are suppressed.
+
+config MAIN_LOG_LEVEL_DBG
+    bool "Debug"
+    help
+        Log up to debug messages. Messages of all severity levels are displayed.
+        No messages are suppressed.
+
+endchoice
+
+config MAIN_LOG_LEVEL
+    int
+    depends on LOG
+    default 0 if MAIN_LOG_LEVEL_OFF
+    default 1 if MAIN_LOG_LEVEL_ERR
+    default 2 if MAIN_LOG_LEVEL_WRN
+    default 3 if MAIN_LOG_LEVEL_INF
+    default 4 if MAIN_LOG_LEVEL_DBG
+
+endmenu
+
+################################################################################
+# Data module
+
+menu "Data module"
+
+########################################
+# Logging
+
+choice DATA_LOG_LEVEL_CHOICE
+    prompt "Log level"
+    depends on LOG
+    default DATA_LOG_LEVEL_INF
+    help
+        Message severity threshold for logging. This option controls which
+        severities of messages are displayed and which ones are suppressed.
+        Messages can have 4 severity levels - debug, info, warning, and error -
+        in that order of increasing severity. Messages below the configured
+        severity threshold are suppressed.
+
+config DATA_LOG_LEVEL_OFF
+    bool "Off"
+    help
+        Do not log messages. No messages are displayed. Messages of all severity
+        levels are suppressed.
+
+config DATA_LOG_LEVEL_ERR
+    bool "Error"
+    help
+        Log up to error messages. Error messages are displayed. Warning, info,
+        and debug messages are suppressed.
+
+config DATA_LOG_LEVEL_WRN
+    bool "Warning"
+    help
+        Log up to warning messages. Error and warning messages are displayed.
+        Info and debug messages are suppressed.
+
+config DATA_LOG_LEVEL_INF
+    bool "Info"
+    help
+        Log up to info messages. Error, warning, and info messages are
+        displayed. Debug messages are suppressed.
+
+config DATA_LOG_LEVEL_DBG
+    bool "Debug"
+    help
+        Log up to debug messages. Messages of all severity levels are displayed.
+        No messages are suppressed.
+
+endchoice
+
+config DATA_LOG_LEVEL
+    int
+    depends on LOG
+    default 0 if DATA_LOG_LEVEL_OFF
+    default 1 if DATA_LOG_LEVEL_ERR
+    default 2 if DATA_LOG_LEVEL_WRN
+    default 3 if DATA_LOG_LEVEL_INF
+    default 4 if DATA_LOG_LEVEL_DBG
+
+endmenu
+
+################################################################################
+# Dummy module
+
+menu "Dummy module"
+
+########################################
+# Logging
+
+choice DUMMY_LOG_LEVEL_CHOICE
+    prompt "Log level"
+    depends on LOG
+    default DUMMY_LOG_LEVEL_INF
+    help
+        Message severity threshold for logging. This option controls which
+        severities of messages are displayed and which ones are suppressed.
+        Messages can have 4 severity levels - debug, info, warning, and error -
+        in that order of increasing severity. Messages below the configured
+        severity threshold are suppressed.
+
+config DUMMY_LOG_LEVEL_OFF
+    bool "Off"
+    help
+        Do not log messages. No messages are displayed. Messages of all severity
+        levels are suppressed.
+
+config DUMMY_LOG_LEVEL_ERR
+    bool "Error"
+    help
+        Log up to error messages. Error messages are displayed. Warning, info,
+        and debug messages are suppressed.
+
+config DUMMY_LOG_LEVEL_WRN
+    bool "Warning"
+    help
+        Log up to warning messages. Error and warning messages are displayed.
+        Info and debug messages are suppressed.
+
+config DUMMY_LOG_LEVEL_INF
+    bool "Info"
+    help
+        Log up to info messages. Error, warning, and info messages are
+        displayed. Debug messages are suppressed.
+
+config DUMMY_LOG_LEVEL_DBG
+    bool "Debug"
+    help
+        Log up to debug messages. Messages of all severity levels are displayed.
+        No messages are suppressed.
+
+endchoice
+
+config DUMMY_LOG_LEVEL
+    int
+    depends on LOG
+    default 0 if DUMMY_LOG_LEVEL_OFF
+    default 1 if DUMMY_LOG_LEVEL_ERR
+    default 2 if DUMMY_LOG_LEVEL_WRN
+    default 3 if DUMMY_LOG_LEVEL_INF
+    default 4 if DUMMY_LOG_LEVEL_DBG
+
+endmenu
+
+################################################################################
+# LTE module
+
+menu "LTE module"
+
+########################################
+# Timeouts
+
+config LTE_CONN_TIMEOUT
+    int "Connection timeout"
+    default 60
+    help
+        Connection timeout in seconds. This option specifies the timeout for
+        waiting for a connection to be established.
+
+config LTE_DATA_TIMEOUT
+    int "Data update timeout"
+    default 30
+    help
+        Data update timeout in seconds. This option specifies the timeout for
+        waiting for data updates.
+
+########################################
+# Power saving features
+
+config LTE_USE_PSM
+    bool "Use PSM"
+    default n
+    help
+        Enable the use of PSM. If this option is selected, the PSM feature will
+        be requested from the LTE network.
+
+config LTE_USE_EDRX
+    bool "Use eDRX"
+    default n
+    help
+        Enable the use of eDRX. If this option is selected, the eDRX feature
+        will be requested from the LTE network.
+
+########################################
+# Logging
+
+choice LTE_LOG_LEVEL_CHOICE
+    prompt "Log level"
+    depends on LOG
+    default LTE_LOG_LEVEL_INF
+    help
+        Message severity threshold for logging. This option controls which
+        severities of messages are displayed and which ones are suppressed.
+        Messages can have 4 severity levels - debug, info, warning, and error -
+        in that order of increasing severity. Messages below the configured
+        severity threshold are suppressed.
+
+config LTE_LOG_LEVEL_OFF
+    bool "Off"
+    help
+        Do not log messages. No messages are displayed. Messages of all severity
+        levels are suppressed.
+
+config LTE_LOG_LEVEL_ERR
+    bool "Error"
+    help
+        Log up to error messages. Error messages are displayed. Warning, info,
+        and debug messages are suppressed.
+
+config LTE_LOG_LEVEL_WRN
+    bool "Warning"
+    help
+        Log up to warning messages. Error and warning messages are displayed.
+        Info and debug messages are suppressed.
+
+config LTE_LOG_LEVEL_INF
+    bool "Info"
+    help
+        Log up to info messages. Error, warning, and info messages are
+        displayed. Debug messages are suppressed.
+
+config LTE_LOG_LEVEL_DBG
+    bool "Debug"
+    help
+        Log up to debug messages. Messages of all severity levels are displayed.
+        No messages are suppressed.
+
+endchoice
+
+config LTE_LOG_LEVEL
+    int
+    depends on LOG
+    default 0 if LTE_LOG_LEVEL_OFF
+    default 1 if LTE_LOG_LEVEL_ERR
+    default 2 if LTE_LOG_LEVEL_WRN
+    default 3 if LTE_LOG_LEVEL_INF
+    default 4 if LTE_LOG_LEVEL_DBG
+
+endmenu
+
+################################################################################
+# GNSS module
+
+menu "GNSS module"
+
+########################################
+# Timeouts
+
+config GNSS_DATA_TIMEOUT
+    int "Data update timeout"
+    default 300
+    help
+        Data update timeout in seconds. This option specifies the timeout for
+        waiting for data updates.
+
+########################################
+# Logging
+
+choice GNSS_LOG_LEVEL_CHOICE
+    prompt "Log level"
+    depends on LOG
+    default GNSS_LOG_LEVEL_INF
+    help
+        Message severity threshold for logging. This option controls which
+        severities of messages are displayed and which ones are suppressed.
+        Messages can have 4 severity levels - debug, info, warning, and error -
+        in that order of increasing severity. Messages below the configured
+        severity threshold are suppressed.
+
+config GNSS_LOG_LEVEL_OFF
+    bool "Off"
+    help
+        Do not log messages. No messages are displayed. Messages of all severity
+        levels are suppressed.
+
+config GNSS_LOG_LEVEL_ERR
+    bool "Error"
+    help
+        Log up to error messages. Error messages are displayed. Warning, info,
+        and debug messages are suppressed.
+
+config GNSS_LOG_LEVEL_WRN
+    bool "Warning"
+    help
+        Log up to warning messages. Error and warning messages are displayed.
+        Info and debug messages are suppressed.
+
+config GNSS_LOG_LEVEL_INF
+    bool "Info"
+    help
+        Log up to info messages. Error, warning, and info messages are
+        displayed. Debug messages are suppressed.
+
+config GNSS_LOG_LEVEL_DBG
+    bool "Debug"
+    help
+        Log up to debug messages. Messages of all severity levels are displayed.
+        No messages are suppressed.
+
+endchoice
+
+config GNSS_LOG_LEVEL
+    int
+    depends on LOG
+    default 0 if GNSS_LOG_LEVEL_OFF
+    default 1 if GNSS_LOG_LEVEL_ERR
+    default 2 if GNSS_LOG_LEVEL_WRN
+    default 3 if GNSS_LOG_LEVEL_INF
+    default 4 if GNSS_LOG_LEVEL_DBG
+
+endmenu
+
+################################################################################
+# REST module
+
+menu "REST module"
+
+########################################
+# Timeouts
+
+config REST_REQ_TIMEOUT
+    int "Request timeout"
+    default 60
+    help
+        Request timeout in seconds. This option specifies the timeout for HTTP
+        requests to the database server.
+
+########################################
+# Memory allocation
+
+config REST_BUF_SIZE
+    int "Response buffer size"
+    default 4096
+    help
+        Buffer size for HTTP responses. This option specifies the buffer size
+        into which HTTP responses from the database server are written.
+
+########################################
+# Security
+
+config REST_SEC_TAG
+    int "Security tag"
+    default 0
+    help
+        TLS security tag. This option specifies the TLS security tag
+        corresponding to the CA certificate provisioned on the modem, that must
+        be used to establish a secure connection with the database server. As
+        the identity of the server isn't verified, it is not necessary to
+        provide the actual certificate from the server. However, a dummy
+        certificate is still required. Otherwise, the system's libraries
+        automatically default to unencrypted connections.
+
+########################################
+# Server
+
+config REST_HOST_NAME
+    string "Host name"
+    default ""
+    help
+        Database server host name. This option specifies the host name of the
+        database server.
+
+config REST_PORT_NUM
+    int "Port number"
+    default 443
+    help
+        Database server port number. This option specifies the port number of
+        the database server.
+
+########################################
+# API
+
+config REST_CONT_TYPE
+    string "Content type"
+    default "application/json"
+    help
+        Content type. This option specifies the value of the "content-type"
+        header field used in HTTP requests to the database server.
+
+config REST_API_KEY
+    string "API key"
+    default ""
+    help
+        API key. This option specifies the value of the "x-apikey" header field
+        used in HTTP requests to the database server.
+
+########################################
+# Logging
+
+choice REST_LOG_LEVEL_CHOICE
+    prompt "Log level"
+    depends on LOG
+    default REST_LOG_LEVEL_INF
+    help
+        Message severity threshold for logging. This option controls which
+        severities of messages are displayed and which ones are suppressed.
+        Messages can have 4 severity levels - debug, info, warning, and error -
+        in that order of increasing severity. Messages below the configured
+        severity threshold are suppressed.
+
+config REST_LOG_LEVEL_OFF
+    bool "Off"
+    help
+        Do not log messages. No messages are displayed. Messages of all severity
+        levels are suppressed.
+
+config REST_LOG_LEVEL_ERR
+    bool "Error"
+    help
+        Log up to error messages. Error messages are displayed. Warning, info,
+        and debug messages are suppressed.
+
+config REST_LOG_LEVEL_WRN
+    bool "Warning"
+    help
+        Log up to warning messages. Error and warning messages are displayed.
+        Info and debug messages are suppressed.
+
+config REST_LOG_LEVEL_INF
+    bool "Info"
+    help
+        Log up to info messages. Error, warning, and info messages are
+        displayed. Debug messages are suppressed.
+
+config REST_LOG_LEVEL_DBG
+    bool "Debug"
+    help
+        Log up to debug messages. Messages of all severity levels are displayed.
+        No messages are suppressed.
+
+endchoice
+
+config REST_LOG_LEVEL
+    int
+    depends on LOG
+    default 0 if REST_LOG_LEVEL_OFF
+    default 1 if REST_LOG_LEVEL_ERR
+    default 2 if REST_LOG_LEVEL_WRN
+    default 3 if REST_LOG_LEVEL_INF
+    default 4 if REST_LOG_LEVEL_DBG
+
+endmenu
