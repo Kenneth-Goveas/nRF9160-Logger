@@ -1,9 +1,9 @@
 # nRF9160 Logger
 
 The *nRF9160 Logger* is a configurable logging device based on the
-[Actinius Icarus v2](https://docs.actinius.com/icarus/introduction) development
-board, which features the [nRF9160](https://www.nordicsemi.com/products/nrf9160)
-SiP. This logger can be configured to regularly upload dummy data, LTE network
+[Actinius Icarus v2](https://www.actinius.com/icarus) development board, which
+features the [nRF9160](https://www.nordicsemi.com/products/nrf9160) SiP. This
+logger can be configured to regularly upload dummy data, LTE network
 information, or GNSS fixes to an online database. For uploading data, the device
 accesses the internet over the LTE-M or NB-IoT network.
 

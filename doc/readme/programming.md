@@ -12,18 +12,19 @@ To build the firmware, carry out the following steps:
   ```
   west build -b actinius_icarus_ns -p auto
   ```
-- If you wish to apply one of the device tree overlays from the [dts](../../dts)
+- If you wish to apply one or more of the device tree overlays from the [dts](../../dts)
   directory, enter the following command to build the firmware:
   ```
-  west build -b actinius_icarus_ns -p auto -- -DDTC_OVERLAY_FILE=<path>
+  west build -b actinius_icarus_ns -p auto -- -DDTC_OVERLAY_FILE=<paths>
   ```
-  where `<path>` is the path to the selected overlay file. For example, the
-  following command applies the
-  [dts/console\_uart1.overlay](../../dts/console_uart1.overlay) device tree
-  overlay while building:
+  where `<paths>` is a space- or semicolon-separated list of paths to the
+  desired overlay files. For example, the following command applies the
+  [dts/console\_uart1.overlay](../../dts/console_uart1.overlay) and
+  [dts/sim\_external.overlay](../../dts/sim_external.overlay) device tree
+  overlays while building:
   ```
   west build -b actinius_icarus_ns -p auto \
-    -- -DDTC_OVERLAY_FILE=dts/console_uart1.overlay
+    -- -DDTC_OVERLAY_FILE="dts/console_uart1.overlay dts/sim_external.overlay"
   ```
 
 The effect of applying the available device tree overlays is summarised below:
@@ -32,22 +33,13 @@ The effect of applying the available device tree overlays is summarised below:
 | ------------------------------------------------------------- | --------------------------------------------- |
 | [dts/console\_uart0.overlay](../../dts/console_uart0.overlay) | Console on UART0, connected to micro-USB      |
 | [dts/console\_uart1.overlay](../../dts/console_uart1.overlay) | Console on UART1, connected to RX and TX pins |
+| [dts/sim\_internal.overlay](../../dts/sim_internal.overlay)   | Use internal eSIM for LTE networking          |
+| [dts/sim\_external.overlay](../../dts/sim_external.overlay)   | Use external nano SIM for LTE networking      |
 
-By selecting the console, messages logged can be directed to the UART port of
-your choice.
+To flash the firmware onto the device, connect the J-Link probe as described in
+[doc/readme/requirements.md](requirements.md) and enter the following command:
+```
+west flash --erase
+```
 
-To flash the firmware onto the device, connect it with a micro-USB cable and
-follow the instructions below:
-
-- Press and hold the reset button, and then press and hold the user button.
-- Release the reset button, followed by the user button.
-- Flash the firmware with the following command:
-  ```
-  mcumgr image upload build/zephyr/app_update.bin \
-    --conntype=serial --connstring="dev=<port>,baud=115200"
-  ```
-  where `<port>` is the serial port connected to the device. On Linux, this
-  would be something like `/dev/ttyUSB<n>` or `/dev/ttyACM<n>`.
-
-Once the flashing process is complete, the application will automatically start
-on the next device reboot.
+Once the flashing process is complete, the application will automatically start.

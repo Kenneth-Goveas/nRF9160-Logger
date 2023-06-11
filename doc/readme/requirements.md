@@ -14,43 +14,38 @@ platforms too.
 
 The following parts are needed to assemble and program the device:
 
-- An Actinius Icarus v2 development board.
-- An LTE-M/NB-IoT antenna.
-- A GNSS antenna.
-- A micro-USB cable.
+- An [Actinius Icarus v2](https://www.actinius.com/icarus) development board.
+- An [LTE-M/NB-IoT antenna](https://www.te.com/usa-en/product-ANT-B8-PW-QW-UFL.html).
+- A [GNSS antenna](https://www.te.com/usa-en/product-ANT-GNCP-C25L12100.html).
+- A [J-Link probe](https://shop.segger.com/debug-trace-probes/debug-probes/j-link/j-link-base-compact).
+- A [TC2030-IDC-NL](https://www.tag-connect.com/product/tc2030-idc-nl)
+  programming cable.
+- A [ARM20-CTX](https://www.tag-connect.com/product/arm20-ctx-20-pin-to-tc2030-idc-adapter-for-cortex)
+  cable adapter.
+- Two micro-USB cables.
 
 To assemble the device, simply attach both antennae to their respective
-connectors on the development board.
+connectors on the development board and power it through the USB connector. To
+program the device, connect the J-Link probe to your computer with another USB
+cable and to the development board with the TC2030-IDC-NL cable and ARM20-CTX
+adapter.
 
 ## Software installation
 
-The following software is required to build and flash the device firmware:
-
-- The nRF Connect SDK.
-- The MCUmgr command line tool.
-
-For instructions on installing the
-[nRF Connect SDK](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/index.html),
-see
-[Installing automatically](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/getting_started/assistant.html).
-In
-[Set up the preferred building method](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/getting_started/assistant.html#set-up-the-preferred-building-method),
+The [nRF Connect SDK](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html)
+version 2.3.0 is required to build and flash the device firmware (while other
+SDK versions are also expected to work, this has not been tested). For
+installation instructions, see [Installing automatically](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/assistant.html).
+In [Set up the preferred building method](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/assistant.html#set-up-the-preferred-building-method),
 you will have the option to choose either VS Code or the command line as your
 development environment. The command line is recommended, as the instructions
 given further in this project documentation are provided for the command line.
-
-To install the
-[MCUmgr](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/services/device_mgmt/mcumgr.html)
-command line tool, see
-[Command line tool](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/services/device_mgmt/mcumgr.html#command-line-tool).
-You may have to first install [Go](https://go.dev/doc/install) before being able
-to install MCUmgr.
 
 ## Database setup
 
 The device, if appropriately configured, should be able to upload to any
 database that offers a secure REST API. However, [restdb.io](https://restdb.io)
-is recommended as this has been tested.
+is recommended as this has been tested and should work out-of-the-box.
 
 To set up the database, you must create an account and follow the instructions
 in [Quick start](https://restdb.io/docs/quick-start) to create the following
@@ -85,5 +80,5 @@ three collections:
 After setting up the database, you must find and note down the endpoint URLs for
 each of the above three collections you created (these are visible in the
 collection settings in developer mode and not in your browser's search bar). You
-must and also note down the full access API key for the database
+must also note down the full access API key for the database
 (see [API keys and CORS Ajax calls](https://restdb.io/docs/apikeys-and-cors)).
