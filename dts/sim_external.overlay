@@ -1,0 +1,5 @@
+/ {
+    sim-select {
+        sim = "external";
+    };
+};
