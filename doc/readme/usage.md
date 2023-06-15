@@ -8,6 +8,7 @@ performed over the default UART0 port, which is accessed through the micro-USB
 connector. If you used an overlay that sets the console to UART1, the connection
 is accessible through the RX and TX pins on the device. In both cases, the UART
 baud rate is 115200. You can use any serial terminal app (such as
-[Serial Terminal](https://github.com/Kenneth-Goveas/Serial-Terminal) for Linux)
-to read out these messages. If you turned off UART to optimize the power
-consumption, no messages will be received.
+[Serial Terminal][serial-terminal] for Linux) to read out these messages. If you
+turned off UART to optimize the power consumption, no messages will be received.
+
+[serial-terminal]:  https://github.com/Kenneth-Goveas/Serial-Terminal

@@ -12,15 +12,15 @@ To build the firmware, carry out the following steps:
   ```
   west build -b actinius_icarus_ns -p auto
   ```
-- If you wish to apply one or more of the device tree overlays from the [dts](../../dts)
-  directory, enter the following command to build the firmware:
+- If you wish to apply one or more of the device tree overlays from the
+  [dts][dts] directory, enter the following command to build the firmware:
   ```
   west build -b actinius_icarus_ns -p auto -- -DDTC_OVERLAY_FILE=<paths>
   ```
   where `<paths>` is a space- or semicolon-separated list of paths to the
   desired overlay files. For example, the following command applies the
-  [dts/console\_uart1.overlay](../../dts/console_uart1.overlay) and
-  [dts/sim\_external.overlay](../../dts/sim_external.overlay) device tree
+  [dts/console\_uart1.overlay][console_uart1.overlay] and
+  [dts/sim\_external.overlay][sim_external.overlay] device tree
   overlays while building:
   ```
   west build -b actinius_icarus_ns -p auto \
@@ -29,17 +29,24 @@ To build the firmware, carry out the following steps:
 
 The effect of applying the available device tree overlays is summarised below:
 
-| **Overlay**                                                   | **Effect**                                    |
-| ------------------------------------------------------------- | --------------------------------------------- |
-| [dts/console\_uart0.overlay](../../dts/console_uart0.overlay) | Console on UART0, connected to micro-USB      |
-| [dts/console\_uart1.overlay](../../dts/console_uart1.overlay) | Console on UART1, connected to RX and TX pins |
-| [dts/sim\_internal.overlay](../../dts/sim_internal.overlay)   | Use internal eSIM for LTE networking          |
-| [dts/sim\_external.overlay](../../dts/sim_external.overlay)   | Use external nano SIM for LTE networking      |
+| **Overlay**                                         | **Effect**            |
+| --------------------------------------------------- | --------------------- |
+| [dts/console\_uart0.overlay][console_uart0.overlay] | Console on UART0      |
+| [dts/console\_uart1.overlay][console_uart1.overlay] | Console on UART1      |
+| [dts/sim\_internal.overlay][sim_internal.overlay]   | Use internal eSIM     |
+| [dts/sim\_external.overlay][sim_external.overlay]   | Use external nano SIM |
 
 To flash the firmware onto the device, connect the J-Link probe as described in
-[doc/readme/requirements.md](requirements.md) and enter the following command:
+[doc/readme/requirements.md][requirements.md] and enter the following command:
 ```
 west flash --erase
 ```
 
 Once the flashing process is complete, the application will automatically start.
+
+[dts]:                    ../../dts
+[console_uart0.overlay]:  ../../dts/console_uart0.overlay
+[console_uart1.overlay]:  ../../dts/console_uart1.overlay
+[sim_internal.overlay]:   ../../dts/sim_internal.overlay
+[sim_external.overlay]:   ../../dts/sim_external.overlay
+[requirements.md]:        requirements.md

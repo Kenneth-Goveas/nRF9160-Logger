@@ -1,7 +1,7 @@
 # Configuring the application
 
 The application can be configured to suit your requirements by assigning the
-parameters in the [prj.conf](../../prj.conf) configuration file. A bare minimum
+parameters in the [prj.conf][prj.conf] configuration file. A bare minimum
 initial setup is required for the application to work at all. Beyond this, it is
 also possible to optimize it for low power usage, enable/disable different
 network modes, adjust the sleep duration and timeouts, and fine tune many other
@@ -45,7 +45,7 @@ server.
 
 The security tag `CONFIG_REST_SEC_TAG` must correspond to an installed CA
 certificate on the nRF9160 modem. A certificate may be installed by simply
-flashing the [nRF9160 Certificate Installer](https://github.com/Kenneth-Goveas/nRF9160-Certificate-Installer)
+flashing the [nRF9160 Certificate Installer][nrf9160-certificate-installer]
 firmware onto the device. The value assigned to `CONFIG_REST_SEC_TAG` must be
 identical to the security tag used while installing the certificate.
 Certificate installation is persistent and therefore, needs to be done only
@@ -104,9 +104,8 @@ appropriate.
 
 The power saving features, PSM and eDRX, may be separately enabled or disabled
 by setting `CONFIG_LTE_USE_PSM` and `CONFIG_LTE_USE_EDRX` respectively to `y` or
-`n`. The timers for PSM and eDRX must be assigned as described in the
-documentation of the AT commands, [AT+CPSMS](https://infocenter.nordicsemi.com/topic/ref_at_commands/REF/at_commands/nw_service/cpsms_set.html)
-and [AT+CEDRXS](https://infocenter.nordicsemi.com/topic/ref_at_commands/REF/at_commands/nw_service/cedrxs_set.html).
+`n`. The timers for PSM and eDRX must be assigned as described in the AT command
+documentation for [AT+CPSMS][at+cpsms] and [AT+CEDRXS][at+cedrxs].
 
 ## Sleep duration and timeouts
 
@@ -143,6 +142,13 @@ to the database server.
 
 Configuration parameters not described above may also be reconfigured to finely
 adjust the application to suit your requirements. The application-specific
-parameters are described in [Kconfig](../../Kconfig). Other configuration
-parameters are defined by the nRF Connect SDK and are documented in the
-[Kconfig reference](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/kconfig/index.html).
+parameters are described in [Kconfig][kconfig]. Other configuration parameters
+are defined by the nRF Connect SDK and are documented in the
+[Kconfig reference][kconfig-reference].
+
+[prj.conf]:                       ../../prj.conf
+[kconfig]:                        ../../Kconfig
+[nrf9160-certificate-installer]:  https://github.com/Kenneth-Goveas/nRF9160-Certificate-Installer
+[at+cpsms]:                       https://infocenter.nordicsemi.com/topic/ref_at_commands/REF/at_commands/nw_service/cpsms_set.html
+[at+cedrxs]:                      https://infocenter.nordicsemi.com/topic/ref_at_commands/REF/at_commands/nw_service/cedrxs_set.html
+[kconfig-reference]:              https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/kconfig/index.html
