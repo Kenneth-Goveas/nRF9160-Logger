@@ -1,3 +1,14 @@
+/** @mainpage   nRF9160 Logger
+ *
+ *  @brief      Configurable logger based on the Actinius Icarus v2.
+ *
+ *  The *nRF9160 Logger* is a configurable logging device based on the Actinius
+ *  Icarus v2 development board, which features the nRF9160 SiP. This logger can
+ *  be configured to regularly upload dummy data, LTE network information, or
+ *  GNSS fixes to an online database. For uploading data, the device accesses
+ *  the internet over the LTE-M/NB-IoT network.
+ */
+
 #include <stdbool.h>
 
 #include <zephyr/kernel.h>
