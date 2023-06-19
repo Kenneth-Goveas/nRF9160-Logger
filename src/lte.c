@@ -8,16 +8,27 @@
 
 #include "data.h"
 
+// Register module for logging.
 LOG_MODULE_REGISTER(lte, CONFIG_LTE_LOG_LEVEL);
 
+// Connection available flag. Value indicates whether or not a connection is
+// established. Semaphore is released whenever value is set to true, to signal
+// threads waiting for connection to be established. Mutex protects against
+// concurrent access, as this is a shared resource.
 static K_SEM_DEFINE(_lte_conn_avail_sem, 0, 1);
 static K_MUTEX_DEFINE(_lte_conn_avail_mutex);
 static bool _lte_conn_avail_flag = false;
 
+// Data available flag. Value indicates whether or not data is available.
+// Semaphore is released whenever value is set to true, to signal threads
+// waiting for data to become available. Mutex protects against concurrent
+// access, as this is a shared resource.
 static K_SEM_DEFINE(_lte_data_avail_sem, 0, 1);
 static K_MUTEX_DEFINE(_lte_data_avail_mutex);
 static bool _lte_data_avail_flag = false;
 
+// Internally stored data frame. Mutex protects against concurrent access, as
+// this is a shared resource.
 static K_MUTEX_DEFINE(_lte_data_frame_mutex);
 static lte_data_frame_t _lte_data_frame = {
     .mode = {
@@ -60,8 +71,14 @@ static lte_data_frame_t _lte_data_frame = {
 };
 
 static void _lte_handler (const struct lte_lc_evt * const evt) {
+    // Check event type and handle event accordingly.
     switch (evt->type) {
         case LTE_LC_EVT_RRC_UPDATE:
+            /*
+             * RRC state updated. Report the new state but take no other action.
+             */
+
+            // Report RRC state.
             switch (evt->rrc_mode) {
                 case LTE_LC_RRC_MODE_CONNECTED:
                     LOG_INF("Entered RRC connected mode");
@@ -72,58 +89,114 @@ static void _lte_handler (const struct lte_lc_evt * const evt) {
             }
             break;
         case LTE_LC_EVT_NW_REG_STATUS:
+            /*
+             * Network registration status updated. Indicate connection
+             * availability/unavailability depending on the registration status.
+             * The only states in which connection is considered available is
+             * when the system is connected to the home or the roaming network.
+             * To indicate that connection is available, flag value must be set
+             * to true and semaphore must be released. If unavailable, flag must
+             * be set to false and semaphore must be reset.
+             */
+
+            // Block other threads from accessing shared resources.
             k_mutex_lock(&_lte_conn_avail_mutex, K_FOREVER);
+
+            // Indicate connection availability/unavailability.
             switch (evt->nw_reg_status) {
                 case LTE_LC_NW_REG_SEARCHING:
+                    /*
+                     * Searching for network. Indicate that network connection
+                     * is unavailable.
+                     */
                     LOG_INF("Searching for LTE network");
                     k_sem_take(&_lte_conn_avail_sem, K_NO_WAIT);
                     _lte_conn_avail_flag = false;
                     break;
                 case LTE_LC_NW_REG_REGISTERED_HOME:
+                    /*
+                     * Connected to home network. Indicate that network
+                     * connection is available.
+                     */
                     LOG_INF("Connected to LTE home network");
                     k_sem_give(&_lte_conn_avail_sem);
                     _lte_conn_avail_flag = true;
                     break;
                 case LTE_LC_NW_REG_REGISTERED_ROAMING:
+                    /*
+                     * Connected to roaming network. Indicate that network
+                     * connection is available.
+                     */
                     LOG_INF("Connected to LTE roaming network");
                     k_sem_give(&_lte_conn_avail_sem);
                     _lte_conn_avail_flag = true;
                     break;
                 case LTE_LC_NW_REG_REGISTERED_EMERGENCY:
+                    /*
+                     * Connected to emergency network. Indicate that network
+                     * connection is unavailable.
+                     */
                     LOG_WRN("Connected to LTE emergency network");
                     k_sem_take(&_lte_conn_avail_sem, K_NO_WAIT);
                     _lte_conn_avail_flag = false;
                     break;
                 case LTE_LC_NW_REG_NOT_REGISTERED:
+                    /*
+                     * Not connected to network. Indicate that network
+                     * connection is unavailable.
+                     */
                     LOG_WRN("Not connected to LTE network");
                     k_sem_take(&_lte_conn_avail_sem, K_NO_WAIT);
                     _lte_conn_avail_flag = false;
                     break;
                 case LTE_LC_NW_REG_UNKNOWN:
+                    /*
+                     * Registration status unknown. Indicate that network
+                     * connection is unavailable.
+                     */
                     LOG_WRN("LTE network connection status unknown");
                     k_sem_take(&_lte_conn_avail_sem, K_NO_WAIT);
                     _lte_conn_avail_flag = false;
                     break;
                 case LTE_LC_NW_REG_REGISTRATION_DENIED:
+                    /*
+                     * Registration denied. Indicate that network connection is
+                     * unavailable.
+                     */
                     LOG_WRN("LTE network connection denied");
                     k_sem_take(&_lte_conn_avail_sem, K_NO_WAIT);
                     _lte_conn_avail_flag = false;
                     break;
                 case LTE_LC_NW_REG_UICC_FAIL:
+                    /*
+                     * Registration failed due to UICC error. Indicate that
+                     * network connection is unavailable.
+                     */
                     LOG_WRN("LTE network connection failed due to UICC error");
                     k_sem_take(&_lte_conn_avail_sem, K_NO_WAIT);
                     _lte_conn_avail_flag = false;
                     break;
             }
+
+            // Allow other threads to access shared resources.
             k_mutex_unlock(&_lte_conn_avail_mutex);
             break;
         case LTE_LC_EVT_LTE_MODE_UPDATE:
+            /*
+             * Network mode updated. Update data frame and indicate data
+             * availability.
+             */
+
+            // Block other threads from accessing shared resources.
             k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
             k_mutex_lock(&_lte_data_frame_mutex, K_FOREVER);
 
+            // Indicate data availability by setting flag value to true and
+            // releasing semaphore.
             k_sem_give(&_lte_data_avail_sem);
             _lte_data_avail_flag = true;
 
+            // Update data frame.
             switch (evt->lte_mode) {
                 case LTE_LC_LTE_MODE_NONE:
                     LOG_WRN("No active network mode");
@@ -142,16 +215,25 @@ static void _lte_handler (const struct lte_lc_evt * const evt) {
                     break;
             }
 
+            // Allow other threads to access shared resources.
             k_mutex_unlock(&_lte_data_avail_mutex);
             k_mutex_unlock(&_lte_data_frame_mutex);
             break;
         case LTE_LC_EVT_CELL_UPDATE:
+            /*
+             * Cell updated. Update data frame and indicate data availability.
+             */
+
+            // Block other threads from accessing shared resources.
             k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
             k_mutex_lock(&_lte_data_frame_mutex, K_FOREVER);
 
+            // Indicate data availability by setting flag value to true and
+            // releasing semaphore. 
             k_sem_give(&_lte_data_avail_sem);
             _lte_data_avail_flag = true;
 
+            // Update data frame
             if ((int)(evt->cell.id) < 0 || (int)(evt->cell.tac) < 0) {
                 _lte_data_frame.cell.valid = false;
 
@@ -171,16 +253,26 @@ static void _lte_handler (const struct lte_lc_evt * const evt) {
                 );
             }
 
+            // Allow other threads to access shared resources.
             k_mutex_unlock(&_lte_data_avail_mutex);
             k_mutex_unlock(&_lte_data_frame_mutex);
             break;
         case LTE_LC_EVT_PSM_UPDATE:
+            /*
+             * PSM configuration updated. Update data frame and indicate data
+             * availability.
+             */
+
+            // Block other threads from accessing shared resources.
             k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
             k_mutex_lock(&_lte_data_frame_mutex, K_FOREVER);
 
+            // Indicate data availability by setting flag value to true and
+            // releasing semaphore. 
             k_sem_give(&_lte_data_avail_sem);
             _lte_data_avail_flag = true;
 
+            // Update data frame.
             if (evt->psm_cfg.tau < 0 || evt->psm_cfg.active_time < 0) {
                 _lte_data_frame.psm.valid = false;
 
@@ -239,16 +331,26 @@ static void _lte_handler (const struct lte_lc_evt * const evt) {
                 );
             }
 
+            // Allow other threads to access shared resources.
             k_mutex_unlock(&_lte_data_avail_mutex);
             k_mutex_unlock(&_lte_data_frame_mutex);
             break;
         case LTE_LC_EVT_EDRX_UPDATE:
+            /*
+             * eDRX configuration updated. Update data frame and indicate data
+             * availability.
+             */
+
+            // Block other threads from accessing shared resources.
             k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
             k_mutex_lock(&_lte_data_frame_mutex, K_FOREVER);
 
+            // Indicate data availability by setting flag value to true and
+            // releasing semaphore. 
             k_sem_give(&_lte_data_avail_sem);
             _lte_data_avail_flag = true;
 
+            // Update data frame.
             switch (evt->edrx_cfg.mode) {
                 case LTE_LC_LTE_MODE_NONE:
                     _lte_data_frame.edrx.valid = false;
@@ -353,6 +455,7 @@ static void _lte_handler (const struct lte_lc_evt * const evt) {
                     break;
             }
 
+            // Allow other threads to access shared resources.
             k_mutex_unlock(&_lte_data_avail_mutex);
             k_mutex_unlock(&_lte_data_frame_mutex);
             break;
@@ -362,12 +465,18 @@ static void _lte_handler (const struct lte_lc_evt * const evt) {
 }
 
 int lte_init (void) {
-    int status;
+    int status; // Return status for API calls.
+
+    /*
+     * Initialize modem. If an error occurs in this process, exit with failure.
+     */
 
     LOG_INF("Initializing modem");
 
+    // Initialize modem.
     status = lte_lc_init();
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to initialize modem (%s)",
             strerror(-status)
@@ -375,10 +484,19 @@ int lte_init (void) {
         return -1;
     }
 
+    /*
+     * Initialize LTE system. The correct sequence is to first power off the
+     * modem, then configure PSM and eDRX, register the LTE event handler, and
+     * finally activate the LTE interface. If an error occurs anywhere in this
+     * process, deinitialize the modem and exit with failure.
+     */
+
     LOG_INF("Initializing LTE");
 
+    // Power off modem.
     status = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_POWER_OFF);
     if (status < 0) {
+        // On error, deinitialize modem and exit with failure.
         LOG_ERR(
             "Failed to set modem to power off mode (%s)",
             strerror(-status)
@@ -395,8 +513,10 @@ int lte_init (void) {
     }
 
     if (IS_ENABLED(CONFIG_LTE_USE_PSM)) {
+        // If configured to use PSM, enable it.
         status = lte_lc_psm_req(true);
         if (status < 0) {
+            // On error, deinitialize modem and exit with failure.
             LOG_ERR(
                 "Failed to enable PSM (%s)",
                 strerror(-status)
@@ -412,8 +532,10 @@ int lte_init (void) {
             return -1;
         }
     } else {
+        // If not configured to use PSM, disable it.
         status = lte_lc_psm_req(false);
         if (status < 0) {
+            // On error, deinitialize modem and exit with failure.
             LOG_ERR(
                 "Failed to disable PSM (%s)",
                 strerror(-status)
@@ -431,8 +553,10 @@ int lte_init (void) {
     }
 
     if (IS_ENABLED(CONFIG_LTE_USE_EDRX)) {
+        // If configured to use eDRX, enable it.
         status = lte_lc_edrx_req(true);
         if (status < 0) {
+            // On error, deinitialize modem and exit with failure.
             LOG_ERR(
                 "Failed to enable eDRX (%s)",
                 strerror(-status)
@@ -448,8 +572,10 @@ int lte_init (void) {
             return -1;
         }
     } else {
+        // If not configured to use eDRX, disable it.
         status = lte_lc_edrx_req(false);
         if (status < 0) {
+            // On error, deinitialize modem and exit with failure.
             LOG_ERR(
                 "Failed to disable eDRX (%s)",
                 strerror(-status)
@@ -466,10 +592,13 @@ int lte_init (void) {
         }
     }
 
+    // Register LTE event handler.
     lte_lc_register_handler(_lte_handler);
 
+    // Activate LTE but not GNSS.
     status = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_ACTIVATE_LTE);
     if (status < 0) {
+        // On error, deinitialize modem and exit with failure.
         LOG_ERR(
             "Failed to set modem to LTE active mode (%s)",
             strerror(-status)
@@ -489,12 +618,18 @@ int lte_init (void) {
 }
 
 void lte_deinit (void) {
-    int status;
+    int status; // Return status for API calls.
+
+    /*
+     * Deinitialize modem. If an error occurs in this process, report failure.
+     */
 
     LOG_WRN("Deinitializing modem");
 
+    // Deinitialize modem.
     status = lte_lc_deinit();
     if (status < 0) {
+        // On error, report failure.
         LOG_ERR(
             "Failed to deinitialize modem (%s)",
             strerror(-status)
@@ -503,8 +638,9 @@ void lte_deinit (void) {
 }
 
 bool lte_conn_avail (void) {
-    bool flag;
+    bool flag;  // Non-shared copy of flag value.
 
+    // Safely copy flag value to non-shared variable.
     k_mutex_lock(&_lte_conn_avail_mutex, K_FOREVER);
     flag = _lte_conn_avail_flag;
     k_mutex_unlock(&_lte_conn_avail_mutex);
@@ -513,21 +649,30 @@ bool lte_conn_avail (void) {
 }
 
 int lte_wait_conn_avail (void) {
-    int status;
-    bool flag;
+    int status; // Return status for API calls.
+    bool flag;  // Non-shared copy of flag value.
 
+    // Safely copy flag value to non-shared variable.
     k_mutex_lock(&_lte_conn_avail_mutex, K_FOREVER);
     flag = _lte_conn_avail_flag;
     k_mutex_unlock(&_lte_conn_avail_mutex);
 
     if (!flag) {
+        /*
+         * If connection isn't available, wait for it. But if timeout expires,
+         * exit with failure.
+         */
+
         LOG_INF("Waiting for LTE connection");
+
+        // Wait for connection availability, with configured timeout.
 
         status = k_sem_take(
             &_lte_conn_avail_sem, K_SECONDS(CONFIG_LTE_CONN_TIMEOUT)
         );
 
         if (status < 0) {
+            // On timeout expiry, exit with failure.
             LOG_ERR("Failed to obtain LTE connection (Timeout expired)");
             return -1;
         }
@@ -537,8 +682,9 @@ int lte_wait_conn_avail (void) {
 }
 
 bool lte_data_avail (void) {
-    bool flag;
+    bool flag;  // Non-shared copy of flag value.
 
+    // Safely copy flag value to non-shared variable.
     k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
     flag = _lte_data_avail_flag;
     k_mutex_unlock(&_lte_data_avail_mutex);
@@ -547,21 +693,30 @@ bool lte_data_avail (void) {
 }
 
 int lte_wait_data_avail (void) {
-    int status;
-    bool flag;
+    int status; // Return status for API calls.
+    bool flag;  // Non-shared copy of flag value.
 
+    // Safely copy flag value to non-shared variable.
     k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
     flag = _lte_data_avail_flag;
     k_mutex_unlock(&_lte_data_avail_mutex);
 
     if (!flag) {
+        /*
+         * If data isn't available, wait for it. But if timeout expires, exit
+         * with failure.
+         */
+
         LOG_INF("Waiting for LTE data updates");
+
+        // Wait for data availability, with configured timeout.
 
         status = k_sem_take(
             &_lte_data_avail_sem, K_SECONDS(CONFIG_LTE_DATA_TIMEOUT)
         );
 
         if (status < 0) {
+            // On timeout expiry, exit with failure.
             LOG_ERR("Failed to obtain LTE data updates (Timeout expired)");
             return -1;
         }
@@ -571,14 +726,19 @@ int lte_wait_data_avail (void) {
 }
 
 void lte_read (lte_data_frame_t * data_frame) {
+    // Block other threads from accessing shared resources.
     k_mutex_lock(&_lte_data_avail_mutex, K_FOREVER);
     k_mutex_lock(&_lte_data_frame_mutex, K_FOREVER);
 
+    // Indicate that data is no longer available, by setting flag value to false
+    // and resetting semaphore.
     k_sem_take(&_lte_data_avail_sem, K_NO_WAIT);
     _lte_data_avail_flag = false;
 
+    // Copy data frame into output buffer.
     memcpy(data_frame, &_lte_data_frame, sizeof(_lte_data_frame));
 
+    // Allow other threads to access shared resources.
     k_mutex_unlock(&_lte_data_avail_mutex);
     k_mutex_unlock(&_lte_data_frame_mutex);
 }

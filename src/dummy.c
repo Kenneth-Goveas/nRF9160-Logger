@@ -3,8 +3,10 @@
 
 #include "data.h"
 
+// Register module for logging.
 LOG_MODULE_REGISTER(dummy, CONFIG_DUMMY_LOG_LEVEL);
 
+// Internally stored data frame.
 static dummy_data_frame_t _dummy_data_frame = {
     .field1 = "First field of dummy data frame with 256 bytes",
     .field2 = "Second field of dummy data frame of length 256 bytes",
@@ -13,5 +15,6 @@ static dummy_data_frame_t _dummy_data_frame = {
 };
 
 void dummy_read (dummy_data_frame_t * data_frame) {
+    // Copy data frame into output buffer.
     memcpy(data_frame, &_dummy_data_frame, sizeof(_dummy_data_frame));
 }

@@ -7,8 +7,10 @@
 
 #include "data.h"
 
+// Register module for logging.
 LOG_MODULE_REGISTER(data, CONFIG_DATA_LOG_LEVEL);
 
+// JSON description for dummy_data_frame_t structures.
 static const struct json_obj_descr _dummy_data_frame_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         dummy_data_frame_t, "field1", field1,
@@ -28,6 +30,7 @@ static const struct json_obj_descr _dummy_data_frame_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_mode_t structures.
 static const struct json_obj_descr _lte_data_frame_mode_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_mode_t, "valid", valid,
@@ -39,6 +42,7 @@ static const struct json_obj_descr _lte_data_frame_mode_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_cell_t structures.
 static const struct json_obj_descr _lte_data_frame_cell_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_cell_t, "valid", valid,
@@ -54,6 +58,7 @@ static const struct json_obj_descr _lte_data_frame_cell_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_psm_tau_t structures.
 static const struct json_obj_descr _lte_data_frame_psm_tau_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_psm_tau_t, "days", day,
@@ -73,6 +78,7 @@ static const struct json_obj_descr _lte_data_frame_psm_tau_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_psm_at_t structures.
 static const struct json_obj_descr _lte_data_frame_psm_at_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_psm_at_t, "hours", hour,
@@ -88,6 +94,7 @@ static const struct json_obj_descr _lte_data_frame_psm_at_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_psm_t structures.
 static const struct json_obj_descr _lte_data_frame_psm_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_psm_t, "valid", valid,
@@ -103,6 +110,7 @@ static const struct json_obj_descr _lte_data_frame_psm_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_edrx_edrx_t structures.
 static const struct json_obj_descr _lte_data_frame_edrx_edrx_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_edrx_edrx_t, "hours", hour,
@@ -122,6 +130,7 @@ static const struct json_obj_descr _lte_data_frame_edrx_edrx_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_edrx_ptw_t structures.
 static const struct json_obj_descr _lte_data_frame_edrx_ptw_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_edrx_ptw_t, "seconds", sec,
@@ -133,6 +142,7 @@ static const struct json_obj_descr _lte_data_frame_edrx_ptw_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_edrx_t structures.
 static const struct json_obj_descr _lte_data_frame_edrx_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         lte_data_frame_edrx_t, "valid", valid,
@@ -152,6 +162,7 @@ static const struct json_obj_descr _lte_data_frame_edrx_descr [] = {
     )
 };
 
+// JSON description for lte_data_frame_t structures.
 static const struct json_obj_descr _lte_data_frame_descr [] = {
     JSON_OBJ_DESCR_OBJECT_NAMED(
         lte_data_frame_t, "mode", mode,
@@ -171,6 +182,7 @@ static const struct json_obj_descr _lte_data_frame_descr [] = {
     )
 };
 
+// JSON description for gnss_data_frame_loc_lat_t structures.
 static const struct json_obj_descr _gnss_data_frame_loc_lat_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         gnss_data_frame_loc_lat_t, "direction", dir,
@@ -194,6 +206,7 @@ static const struct json_obj_descr _gnss_data_frame_loc_lat_descr [] = {
     )
 };
 
+// JSON description for gnss_data_frame_loc_lon_t structures.
 static const struct json_obj_descr _gnss_data_frame_loc_lon_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         gnss_data_frame_loc_lon_t, "direction", dir,
@@ -217,6 +230,7 @@ static const struct json_obj_descr _gnss_data_frame_loc_lon_descr [] = {
     )
 };
 
+// JSON description for gnss_data_frame_loc_t structures.
 static const struct json_obj_descr _gnss_data_frame_loc_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         gnss_data_frame_loc_t, "valid", valid,
@@ -232,6 +246,7 @@ static const struct json_obj_descr _gnss_data_frame_loc_descr [] = {
     )
 };
 
+// JSON description for gnss_data_frame_date_t structures.
 static const struct json_obj_descr _gnss_data_frame_date_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         gnss_data_frame_date_t, "valid", valid,
@@ -251,6 +266,7 @@ static const struct json_obj_descr _gnss_data_frame_date_descr [] = {
     )
 };
 
+// JSON description for gnss_data_frame_time_t structures.
 static const struct json_obj_descr _gnss_data_frame_time_descr [] = {
     JSON_OBJ_DESCR_PRIM_NAMED(
         gnss_data_frame_time_t, "valid", valid,
@@ -274,6 +290,7 @@ static const struct json_obj_descr _gnss_data_frame_time_descr [] = {
     )
 };
 
+// JSON description for gnss_data_frame_t structures.
 static const struct json_obj_descr _gnss_data_frame_descr [] = {
     JSON_OBJ_DESCR_OBJECT_NAMED(
         gnss_data_frame_t, "location", loc,
@@ -292,11 +309,19 @@ static const struct json_obj_descr _gnss_data_frame_descr [] = {
 int data_dummy_data_frame_to_json (
     dummy_data_frame_t * data_frame, char * json, size_t len
 ) {
-    int status;
+    int status; // Return status for API calls.
 
+    // Initialize output buffer with zeros.
     memset(json, 0, len);
 
+    /*
+     * Encode data frame in JSON format and store it in output buffer. If an
+     * error occurs in this process, exit with failure.
+     */
+
     LOG_INF("Encoding dummy data frame into JSON format");
+
+    // Encode data frame into buffer.
 
     status = json_obj_encode_buf(
         _dummy_data_frame_descr, ARRAY_SIZE(_dummy_data_frame_descr),
@@ -304,6 +329,7 @@ int data_dummy_data_frame_to_json (
     );
 
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to encode dummy data frame into JSON format (%s)",
             strerror(-status)
@@ -317,11 +343,19 @@ int data_dummy_data_frame_to_json (
 int data_lte_data_frame_to_json (
     lte_data_frame_t * data_frame, char * json, size_t len
 ) {
-    int status;
+    int status; // Return status for API calls.
 
+    // Initialize output buffer with zeros.
     memset(json, 0, len);
 
+    /*
+     * Encode data frame in JSON format and store it in output buffer. If an
+     * error occurs in this process, exit with failure.
+     */
+
     LOG_INF("Encoding LTE data frame into JSON format");
+
+    // Encode data frame into buffer.
 
     status = json_obj_encode_buf(
         _lte_data_frame_descr, ARRAY_SIZE(_lte_data_frame_descr),
@@ -329,6 +363,7 @@ int data_lte_data_frame_to_json (
     );
 
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to encode LTE data frame into JSON format (%s)",
             strerror(-status)
@@ -342,11 +377,19 @@ int data_lte_data_frame_to_json (
 int data_gnss_data_frame_to_json (
     gnss_data_frame_t * data_frame, char * json, size_t len
 ) {
-    int status;
+    int status; // Return status for API calls.
 
+    // Initialize output buffer with zeros.
     memset(json, 0, len);
 
+    /*
+     * Encode data frame in JSON format and store it in output buffer. If an
+     * error occurs in this process, exit with failure.
+     */
+
     LOG_INF("Encoding GNSS data frame into JSON format");
+
+    // Encode data frame into buffer.
 
     status = json_obj_encode_buf(
         _gnss_data_frame_descr, ARRAY_SIZE(_gnss_data_frame_descr),
@@ -354,6 +397,7 @@ int data_gnss_data_frame_to_json (
     );
 
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to encode GNSS data frame into JSON format (%s)",
             strerror(-status)

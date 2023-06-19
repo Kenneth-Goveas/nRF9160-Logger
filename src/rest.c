@@ -9,21 +9,31 @@
 
 #include <net/rest_client.h>
 
+// Register module for logging.
 LOG_MODULE_REGISTER(rest, CONFIG_REST_LOG_LEVEL);
 
+// HTTP response buffer.
 static char _rest_resp[CONFIG_REST_BUF_SIZE];
 
 int rest_get (const char * url, char * payload) {
-    int status;
+    int status; // Return status for API calls.
 
-    struct rest_client_req_context req;
-    struct rest_client_resp_context resp;
+    struct rest_client_req_context req;     // HTTP request.
+    struct rest_client_resp_context resp;   // HTTP response.
 
+    // HTTP request headers.
     const char * header_fields [] = {
         "content-type: " CONFIG_REST_CONT_TYPE "\r\n",
         "x-apikey: " CONFIG_REST_API_KEY "\r\n",
         NULL
     };
+
+    /*
+     * Make HTTP request and interpret response. If an error occurs in this
+     * process, or if the response has an unexpected code, exit with failure.
+     */
+
+    // Create HTTP request.
 
     req.host = CONFIG_REST_HOST_NAME;
     req.port = CONFIG_REST_PORT_NUM;
@@ -43,12 +53,16 @@ int rest_get (const char * url, char * payload) {
     req.resp_buff = _rest_resp;
     req.resp_buff_len = sizeof(_rest_resp);
 
+    // Initialize HTTP response buffer with zeros.
     memset(_rest_resp, 0, sizeof(_rest_resp));
 
     LOG_INF("Making GET request");
 
+    // Make HTTP request.
+
     status = rest_client_request(&req, &resp);
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to make GET request (%s)",
             strerror(-status)
@@ -57,6 +71,7 @@ int rest_get (const char * url, char * payload) {
     }
 
     if (resp.http_status_code != 200) {
+        // On unexpected response code, exit with failure.
         LOG_ERR(
             "GET request failed (Response code %hu)",
             resp.http_status_code
@@ -64,22 +79,31 @@ int rest_get (const char * url, char * payload) {
         return -1;
     }
 
+    // Copy payload to output buffer.
     strncpy(payload, resp.response, resp.response_len);
 
     return 0;
 }
 
 int rest_put (const char * url, const char * payload) {
-    int status;
+    int status; // Return status for API calls.
 
-    struct rest_client_req_context req;
-    struct rest_client_resp_context resp;
+    struct rest_client_req_context req;     // HTTP request.
+    struct rest_client_resp_context resp;   // HTTP response.
 
+    // HTTP request headers.
     const char * header_fields [] = {
         "content-type: " CONFIG_REST_CONT_TYPE "\r\n",
         "x-apikey: " CONFIG_REST_API_KEY "\r\n",
         NULL
     };
+
+    /*
+     * Make HTTP request and interpret response. If an error occurs in this
+     * process, or if the response has an unexpected code, exit with failure.
+     */
+
+    // Create HTTP request.
 
     req.host = CONFIG_REST_HOST_NAME;
     req.port = CONFIG_REST_PORT_NUM;
@@ -99,12 +123,16 @@ int rest_put (const char * url, const char * payload) {
     req.resp_buff = _rest_resp;
     req.resp_buff_len = sizeof(_rest_resp);
 
+    // Initialize HTTP response buffer with zeros.
     memset(_rest_resp, 0, sizeof(_rest_resp));
 
     LOG_INF("Making PUT request");
 
+    // Make HTTP request.
+
     status = rest_client_request(&req, &resp);
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to make PUT request (%s)",
             strerror(-status)
@@ -113,6 +141,7 @@ int rest_put (const char * url, const char * payload) {
     }
 
     if (resp.http_status_code != 200) {
+        // On unexpected response code, exit with failure.
         LOG_ERR(
             "PUT request failed (Response code %hu)",
             resp.http_status_code
@@ -124,16 +153,24 @@ int rest_put (const char * url, const char * payload) {
 }
 
 int rest_post (const char * url, const char * payload) {
-    int status;
+    int status; // Return status for API calls.
 
-    struct rest_client_req_context req;
-    struct rest_client_resp_context resp;
+    struct rest_client_req_context req;     // HTTP request.
+    struct rest_client_resp_context resp;   // HTTP response.
 
+    // HTTP request headers.
     const char * header_fields [] = {
         "content-type: " CONFIG_REST_CONT_TYPE "\r\n",
         "x-apikey: " CONFIG_REST_API_KEY "\r\n",
         NULL
     };
+
+    /*
+     * Make HTTP request and interpret response. If an error occurs in this
+     * process, or if the response has an unexpected code, exit with failure.
+     */
+
+    // Create HTTP request.
 
     req.host = CONFIG_REST_HOST_NAME;
     req.port = CONFIG_REST_PORT_NUM;
@@ -153,12 +190,16 @@ int rest_post (const char * url, const char * payload) {
     req.resp_buff = _rest_resp;
     req.resp_buff_len = sizeof(_rest_resp);
 
+    // Initialize HTTP response buffer with zeros.
     memset(_rest_resp, 0, sizeof(_rest_resp));
 
     LOG_INF("Making POST request");
 
+    // Make HTTP request.
+
     status = rest_client_request(&req, &resp);
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to make POST request (%s)",
             strerror(-status)
@@ -167,6 +208,7 @@ int rest_post (const char * url, const char * payload) {
     }
 
     if (resp.http_status_code != 201) {
+        // On unexpected response code, exit with failure.
         LOG_ERR(
             "POST request failed (Response code %hu)",
             resp.http_status_code
@@ -178,16 +220,24 @@ int rest_post (const char * url, const char * payload) {
 }
 
 int rest_delete (const char * url) {
-    int status;
+    int status; // Return status for API calls.
 
-    struct rest_client_req_context req;
-    struct rest_client_resp_context resp;
+    struct rest_client_req_context req;     // HTTP request.
+    struct rest_client_resp_context resp;   // HTTP response.
 
+    // HTTP request headers.
     const char * header_fields [] = {
         "content-type: " CONFIG_REST_CONT_TYPE "\r\n",
         "x-apikey: " CONFIG_REST_API_KEY "\r\n",
         NULL
     };
+
+    /*
+     * Make HTTP request and interpret response. If an error occurs in this
+     * process, or if the response has an unexpected code, exit with failure.
+     */
+
+    // Create HTTP request.
 
     req.host = CONFIG_REST_HOST_NAME;
     req.port = CONFIG_REST_PORT_NUM;
@@ -207,12 +257,16 @@ int rest_delete (const char * url) {
     req.resp_buff = _rest_resp;
     req.resp_buff_len = sizeof(_rest_resp);
 
+    // Initialize HTTP response buffer with zeros.
     memset(_rest_resp, 0, sizeof(_rest_resp));
 
     LOG_INF("Making DELETE request");
 
+    // Make HTTP request.
+
     status = rest_client_request(&req, &resp);
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to make DELETE request (%s)",
             strerror(-status)
@@ -221,6 +275,7 @@ int rest_delete (const char * url) {
     }
 
     if (resp.http_status_code != 200) {
+        // On unexpected response code, exit with failure.
         LOG_ERR(
             "DELETE request failed (Response code %hu)",
             resp.http_status_code

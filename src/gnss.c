@@ -9,12 +9,19 @@
 
 #include "data.h"
 
+// Register module for logging.
 LOG_MODULE_REGISTER(gnss, CONFIG_GNSS_LOG_LEVEL);
 
+// Data available flag. Value indicates whether or not data is available.
+// Semaphore is released whenever value is set to true, to signal threads
+// waiting for data to become available. Mutex protects against concurrent
+// access, as this is a shared resource.
 static K_SEM_DEFINE(_gnss_data_avail_sem, 0, 1);
 static K_MUTEX_DEFINE(_gnss_data_avail_mutex);
 static bool _gnss_data_avail_flag = false;
 
+// Internally stored data frame. Mutex protects against concurrent access, as
+// this is a shared resource.
 static K_MUTEX_DEFINE(_gnss_data_frame_mutex);
 static gnss_data_frame_t _gnss_data_frame = {
     .loc = {
@@ -50,25 +57,46 @@ static gnss_data_frame_t _gnss_data_frame = {
 };
 
 static void _gnss_handler (int evt) {
-    int status;
-    struct nrf_modem_gnss_pvt_data_frame pvt;
+    int status;                                 // Return status for API calls.
+    struct nrf_modem_gnss_pvt_data_frame pvt;   // PVT solution.
 
+    // Check event type and handle event accordingly.
     switch (evt) {
         case NRF_MODEM_GNSS_EVT_PVT:
+            /*
+             * Fix obtained. Parse fix data and if fix is valid, update data
+             * frame and indicate data availability. If an error occurs in this
+             * process, report failure and exit.
+             */
+
+            // Parse fix data.
+
             status = nrf_modem_gnss_read(
                 &pvt, sizeof(pvt), NRF_MODEM_GNSS_DATA_PVT
             );
+
             if (status < 0) {
+                // On error, report failure and exit.
                 LOG_ERR(
                     "Failed to parse GNSS fix (%s)",
                     strerror(-status)
                 );
             } else if (pvt.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID) {
+                /*
+                 * On valid fix, update data frame, and indicate data
+                 * availability.
+                 */
+
+                // Block other threads from accessing shared resources.
                 k_mutex_lock(&_gnss_data_avail_mutex, K_FOREVER);
                 k_mutex_lock(&_gnss_data_frame_mutex, K_FOREVER);
 
+                // Indicate data availability by setting flag value to true and
+                // releasing semaphore.
                 k_sem_give(&_gnss_data_avail_sem);
                 _gnss_data_avail_flag = true;
+
+                // Update data frame.
 
                 _gnss_data_frame.loc.valid = true;
 
@@ -151,6 +179,7 @@ static void _gnss_handler (int evt) {
                     _gnss_data_frame.time.sec, _gnss_data_frame.time.msec
                 );
 
+                // Allow other threads to access shared resources.
                 k_mutex_unlock(&_gnss_data_avail_mutex);
                 k_mutex_unlock(&_gnss_data_frame_mutex);
             }
@@ -161,12 +190,18 @@ static void _gnss_handler (int evt) {
 }
 
 int gnss_init (void) {
-    int status;
+    int status; // Return status for API calls.
+
+    /*
+     * Initialize modem. If an error occurs in this process, exit with failure.
+     */
 
     LOG_INF("Initializing modem");
 
+    // Initialize modem.
     status = lte_lc_init();
     if (status < 0) {
+        // On error, exit with failure.
         LOG_ERR(
             "Failed to initialize modem (%s)",
             strerror(-status)
@@ -174,10 +209,20 @@ int gnss_init (void) {
         return -1;
     }
 
+    /*
+     * Initialize GNSS system. The correct sequence is to activate the GNSS
+     * interface, configure the GNSS to operate in single fix mode by setting
+     * the periodic fix interval as well as the fix retry period to zero, and
+     * finally register the GNSS event handler. If an error occurs anywhere in
+     * this process, deinitialize the modem and exit with failure.
+     */
+
     LOG_INF("Initializing GNSS");
 
+    // Activate GNSS but not LTE.
     status = lte_lc_func_mode_set(LTE_LC_FUNC_MODE_ACTIVATE_GNSS);
     if (status < 0) {
+        // On error, deinitialize modem and exit with failure.
         LOG_ERR(
             "Failed to set modem to GNSS active mode (%s)",
             strerror(-status)
@@ -193,8 +238,10 @@ int gnss_init (void) {
         return -1;
     }
 
+    // Set periodic fix interval to zero.
     status = nrf_modem_gnss_fix_interval_set(0);
     if (status < 0) {
+        // On error, deinitialize modem and exit with failure.
         LOG_ERR(
             "Failed to set GNSS fix interval (%s)",
             strerror(-status)
@@ -210,8 +257,10 @@ int gnss_init (void) {
         return -1;
     }
 
+    // Set fix retry interval to zero.
     status = nrf_modem_gnss_fix_retry_set(0);
     if (status < 0) {
+        // On error, deinitialize modem and exit with failure.
         LOG_ERR(
             "Failed to set GNSS fix retry period (%s)",
             strerror(-status)
@@ -227,12 +276,20 @@ int gnss_init (void) {
         return -1;
     }
 
+    // Register GNSS event handler.
     nrf_modem_gnss_event_handler_set(_gnss_handler);
+
+    /*
+     *  Start GNSS reception. If an error occurs in this process, deinitialize
+     *  the modem and exit with failure.
+     */
 
     LOG_INF("Starting GNSS");
 
+    // Start GNSS reception.
     status = nrf_modem_gnss_start();
     if (status < 0) {
+        // On error, deinitialize modem and exit with failure.
         LOG_ERR(
             "Failed to start GNSS (%s)",
             strerror(-status)
@@ -252,22 +309,35 @@ int gnss_init (void) {
 }
 
 void gnss_deinit (void) {
-    int status;
+    int status; // Return status for API calls.
+
+    /*
+     * Stop GNSS reception. If an error occurs in this process, report failure
+     * but proceed anyway to deinitialize the modem.
+     */
 
     LOG_WRN("Stopping GNSS");
 
+    // Stop GNSS reception.
     status = nrf_modem_gnss_stop();
     if (status < 0) {
+        // On error, report failure.
         LOG_ERR(
             "Failed to stop GNSS (%s)",
             strerror(-status)
         );
     }
 
+    /*
+     * Deinitialize modem. If an error occurs in this process, report failure.
+     */
+
     LOG_WRN("Deinitializing modem");
 
+    // Deinitialize modem.
     status = lte_lc_deinit();
     if (status < 0) {
+        // On error, report failure.
         LOG_ERR(
             "Failed to deinitialize modem (%s)",
             strerror(-status)
@@ -276,8 +346,9 @@ void gnss_deinit (void) {
 }
 
 bool gnss_data_avail (void) {
-    bool flag;
+    bool flag;  // Non-shared copy of flag value.
 
+    // Safely copy flag value to non-shared variable.
     k_mutex_lock(&_gnss_data_avail_mutex, K_FOREVER);
     flag = _gnss_data_avail_flag;
     k_mutex_unlock(&_gnss_data_avail_mutex);
@@ -286,21 +357,30 @@ bool gnss_data_avail (void) {
 }
 
 int gnss_wait_data_avail (void) {
-    int status;
-    bool flag;
+    int status; // Return status for API calls.
+    bool flag;  // Non-shared copy of flag value.
 
+    // Safely copy flag value to non-shared variable.
     k_mutex_lock(&_gnss_data_avail_mutex, K_FOREVER);
     flag = _gnss_data_avail_flag;
     k_mutex_unlock(&_gnss_data_avail_mutex);
 
     if (!flag) {
+        /*
+         * If data isn't available, wait for it. But if timeout expires, exit
+         * with failure.
+         */
+
         LOG_INF("Waiting for GNSS data updates");
+
+        // Wait for data availability, with configured timeout.
 
         status = k_sem_take(
             &_gnss_data_avail_sem, K_SECONDS(CONFIG_GNSS_DATA_TIMEOUT)
         );
 
         if (status < 0) {
+            // On timeout expiry, exit with failure.
             LOG_ERR("Failed to obtain GNSS data updates (Timeout expired)");
             return -1;
         }
@@ -310,14 +390,19 @@ int gnss_wait_data_avail (void) {
 }
 
 void gnss_read (gnss_data_frame_t * data_frame) {
+    // Block other threads from accessing shared resources.
     k_mutex_lock(&_gnss_data_avail_mutex, K_FOREVER);
     k_mutex_lock(&_gnss_data_frame_mutex, K_FOREVER);
 
+    // Indicate that data is no longer available, by setting flag value to false
+    // and resetting semaphore.
     k_sem_take(&_gnss_data_avail_sem, K_NO_WAIT);
     _gnss_data_avail_flag = false;
 
+    // Copy data frame into output buffer.
     memcpy(data_frame, &_gnss_data_frame, sizeof(_gnss_data_frame));
 
+    // Allow other threads to access shared resources.
     k_mutex_unlock(&_gnss_data_avail_mutex);
     k_mutex_unlock(&_gnss_data_frame_mutex);
 }
