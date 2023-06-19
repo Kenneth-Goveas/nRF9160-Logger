@@ -21,6 +21,8 @@ is recommended to read them in the order in which they are listed here:
   building the firmware from source code and flashing it onto the device.
 - [doc/readme/usage.md][usage.md]: Describes how to use the device after the
   firmware has been flashed.
+- [doc/readme/documentation.md][documentation.md] Contains instructions for
+  generating source code documentation using Doxygen.
 
 The main purpose of this project is to experimentally study the power
 consumption involved in GNSS tracking and data logging using cellular IoT
@@ -32,5 +34,6 @@ should be easy to adapt it for other purposes.
 [configuration.md]:   doc/readme/configuration.md
 [programming.md]:     doc/readme/programming.md
 [usage.md]:           doc/readme/usage.md
+[documentation.md]:   doc/readme/documentation.md
 [actinius-icarus-v2]: https://www.actinius.com/icarus
 [nrf9160]:            https://www.nordicsemi.com/products/nrf9160
